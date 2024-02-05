@@ -67,6 +67,7 @@ void putt(const int argc, const char** argv) {
 
 
             while(j < argc) {
+                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;} 
                 if(argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
                     break;
                 }
@@ -74,7 +75,7 @@ void putt(const int argc, const char** argv) {
                 ++j;
             }
             i=j;
-        } else if(command == "-nm") print_main = false;   
+        } 
     }
    
     file << "\n";
@@ -93,6 +94,7 @@ void putt(const int argc, const char** argv) {
             }
             
             while(j < argc) {
+                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;} 
                 if(argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
                     break;
                 }
