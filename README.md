@@ -1,31 +1,73 @@
 # gentemp
-This is just a simple program that will generate some basic boiler plate Java Code. Think of Templates/Snippets.
+This is just a simple program that will generate some basic boiler plate Java Code. Think of Templates/Snippets but for basic Algorithm targeted problems!
 
 ## Why Make This? 
-To me this program primarily serves to simply help create boilerplate code for things like Competitive Programming or more Specifically UIL CS.
+To me this program primarily serves to simply help create boilerplate code for things like Competitive Programming or more Specifically UIL CS. <br />
+This project at no point will aim to implement things like Templates for Data Structures and or Algorithms.  <br />
 
+## Available Commands
+There is currently support for the Following Commands: <br /> <br />
+-i: This will add as many imports as you want on top of the basic util/io. <br /> <br />
+-c: This will add a basic empty class that you may need. add as many as you want. <br /> <br />
+-nm: This will create a file without a main entry point <br /> <br />
+-S {Implements}: Creates Sort Class that can help generating a sort method for Collections. <br /> <br />
+-CArr {Name:Required} {Type:Optional}: Creates an ArrayList of type Type with name Name while putting data into it.  <br /> <br />
+Note: This list is growing. <br />
 ## Running
-Just compile the gen.cpp file with any of your favorite compilers and run the program.<br />
-If you want the default output simple run ./gen [file]. <br />
-If you want to add separate classes run ./gen [class1] [class2] etc.<br />
-Same thing goes with imports, and the command -nm will not create a main entry point<br />
-
+```
+$ g++ gen.cpp -o "gen"
+```
+not that bad.  <br />
 ## Example
 ```
-$ ./gen Test.java -nm -i java.awt.* -c Person Clown
+$ .\gen Test.java -i java.awt.* java.lang.System.* -c Clown Person Alien -S Comparator -CArr list Integer 
 ```
-That Command will have this output<br />
+This command is to show just what most of the features can do.  <br />
+The following code is the output of this command:  <br />
 
-```
+``` java
 import java.util.*;
 import java.io.*;
 import java.awt.*;
+import java.lang.System.*;
+
+
+class Sort implements Comparator<> {
+	public static int compare(Object o, Object k) {
+
+	}
+}
+
+
+class Clown {
+
+}
 
 class Person {
 
 }
 
-class Clown {
+class Alien {
+
+}
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+
+		Scanner s = new Scanner(new File("Test.dat"));
+
+		int T = s.nextInt();
+
+		while(T-- > 0) {
+			int n = s.nextInt();
+			ArrayList<Integer> list = new ArrayList<Integer> ();
+			for(int i = 0; i < n; i++) {
+				list.add(s.next());
+			}
+		}
+
+		s.close();
+	}
 
 }
 ```
