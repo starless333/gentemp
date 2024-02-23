@@ -1,15 +1,15 @@
 #include <cctype>
 #include<iostream>
 #include<cstdlib>
-#include <stdint.h>
-#include <stdlib.h>
 #include<string>
 #include<fstream>
 #include<cstring>
-
+#include<set>
+#include<vector>
 //idea is that there is a default template. 
 //import java.util.*;
-void putt(const int,const char** );
+const std::set<std::string> commands = {"-h","-m","-nm","-CArr","-c","-S","-i"};
+void putt(const int,const char**);   
 void print_menu(void);
 int isFile(const char* file);
 int isHelp(const char* command);
@@ -19,7 +19,7 @@ int main(const int argc, const char** argv) {
         print_menu();
         return EXIT_SUCCESS;
     }
-
+        
     if(argc < 2 || !isFile(argv[1]))  {
         std::cerr << "invalid input. please include file and or commands\n";
         std::cerr << "for more information on what commands can be called run ./gen -h\n";
@@ -36,7 +36,17 @@ void print_menu(void) {
     std::cout << "available commands to add to template\n";
     std::cout << "-i: add extra imports. ex: -i [name]...[name]\n";
     std::cout << "-c: add classes. ex: -c [name]...[name]\n";
-    std::cout << "-nm: the generated code will not create a main.";
+    std::cout << "-nm: the generated code will not create a main.\n";
+    std::cout << "-S <Implements>: creates sort method necessary for sorting Objects\n";
+    //class sort implements Comparator<> {}
+    std::cout << "-CArr <Name><Type>: Creates an ArrayList<Object> that picks up n test cases\n";
+    //int n = s.nextInt();
+    //ArrayList<Type> <Name> = new ArrayList<>();
+    //for(int i = 0; i < n; ++i) {<Name>.add(s.next<Type>());}
+    std::cout << "-m <Name> <Return Type> <Parameter> + <Name>...: will create a method with given return types and parameters;\n";
+}
+bool isCommand(const std::string word) {
+    return commands.count(word) != 0;
 }
 
 // note... argv[1] = file_name
@@ -47,7 +57,7 @@ void putt(const int argc, const char** argv) {
     bool print_main = true;    
     std::ofstream file;
     file.open(f);
-
+    bool print_cin = false;
     if(!file) {
         std::cerr << "Could Not Open File.\n";
         exit(EXIT_FAILURE);
@@ -55,6 +65,7 @@ void putt(const int argc, const char** argv) {
     file << "import java.util.*;\nimport java.io.*;\n";
 //    std::cout << file.rdbuf();
     //this loop takes care of all imports that are run in the command line.
+    std::string name, type;
     for(int i = 2; i < argc; i++ ) {
         std::string command = argv[i];
         if(command == "-i") {
@@ -75,14 +86,32 @@ void putt(const int argc, const char** argv) {
                 ++j;
             }
             i=j;
-        } 
+        } else if(command == "-CArr")  {
+            print_cin = true;
+            if(i+1 >= argc || isCommand(argv[i+1])) continue;
+            if(i+2 >= argc || isCommand(argv[i+2])) {name = argv[i+1]; continue;}
+            if(!isCommand(argv[i+1]) && !isCommand(argv[i+2])) {name=argv[i+1]; type=argv[i+2]; i+=2; continue;}
+        } else if(command == "-nm") {print_main =false;}
     }
    
     file << "\n";
     //this new line is just to make the code look nicer and less clunky 
     //this loop takes care of the classes that are input by the user
     //relooping kind of sucks but its okay because some people may want to use multiple -i for some reason!
-    
+    //-S <Implements>
+    for(int i = 2; i < argc; i++ ) {
+        if(argv[i] == std::string("-S")) {
+            int j = i+1;
+            if(j == argc || isCommand(argv[j])) {
+                // no parameters;
+                file << "\nclass Sort {}\n";
+                break;
+            }
+            file << "\nclass Sort implements " << argv[j] << "<> {\n\tpublic static int compare(Object o";
+            file << ", Object k) {\n\n\t}\n}\n\n\n";
+        }
+    }
+
     for(int i = 2; i < argc; i++ ) {
         std::string command = argv[i];
 
@@ -95,7 +124,7 @@ void putt(const int argc, const char** argv) {
             
             while(j < argc) {
                 if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;} 
-                if(argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
+                if( isCommand(argv[j]) ||argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
                     break;
                 }
                 file << "class " << argv[j] << " {\n\n";
@@ -125,10 +154,40 @@ void putt(const int argc, const char** argv) {
         file << "\tpublic static void main(String[] args) throws IOException {\n";
         file << "\n\t\tScanner s = new Scanner(new File(\"" << f << ".dat\"));\n\n"; 
         file << "\t\tint T = s.nextInt();\n";
-        file << "\n\t\twhile(T-- > 0) {\n\n\t\t}\n\n\n";
-        file << "\n\n\t\ts.close();\n\t}\n}";
+        file << "\n\t\twhile(T-- > 0) {\n";
+        if(print_cin) {
+            file << "\t\t\tint n = s.nextInt();\n"; 
+            if(name.size() == 0) {std::cerr << "please provide name for CArr\n"; exit(EXIT_FAILURE);} 
+            if(type.size() == 0) {
+                file <<"\t\t\tArrayList<Object> " << name << " = new ArrayList<Object> ();\n";
+            }   
+            else file << "\t\t\tArrayList<" << type << "> " << name << " = new ArrayList<" << type<< "> ();\n";
+            file << "\t\t\t" << "for(int i = 0; i < n; i++) {\n\t\t\t\t" << name << ".add(";
+            file << "s.next" <<  "());\n\t\t\t}\n";
+        }
+        file << "\t\t}";
+        file << "\n\n\t\ts.close();\n\t}\n";
     }
-
+    //<Name> <Return Type> <Parameters...>
+    for(int i = 2; i < argc; i++ ) {
+        if(argv[i] == std::string("-m")) {
+            int j = i+1;
+            std::vector<std::string> vec;
+            while(j < argc && !isCommand(argv[j])) {
+                vec.push_back(argv[j++]); 
+            }
+            file << "\n//------------------------------------------\n";
+            file << "public static " << vec[1] << " " << vec[0] <<"(";
+            for(int k = 2; k < vec.size()-1; k+=2 ) {
+                if(k == vec.size()-2) {file << vec[k] << " " << vec[k+1]; break;}
+                file << vec[k] << " " << vec[k+1] << ", ";
+            }       
+            file << ") {\n\n\n\treturn " << "null;\n}\n";
+            i=j-1;
+        }
+        
+    }
+    if(print_main)file << "\n}";
     file.close();
 
     return;
