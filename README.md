@@ -15,8 +15,9 @@ There is currently support for the Following Commands: <br /> <br />
 Note: This list is growing. <br />
 ## Running
 ```
-$ g++ gen.cpp -o "gen"
+$ g++ gen.cpp -o "gen" <br/>
 ```
+NOTE: if you do not use nvim simply change the last few lines of the progarm to whatever text editor you do use. IE. vim, emacs, code. <br/>
 not that bad.  <br />
 ## Example
 ```
