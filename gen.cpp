@@ -6,10 +6,10 @@
 #include<cstring>
 #include<set>
 #include<vector>
-//idea is that there is a default template. 
+//idea is that there is a default template.
 //import java.util.*;
-const std::set<std::string> commands = {"-h","-m","-nm","-CArr","-c","-S","-i"};
-void putt(const int,const char**);   
+const std::set<std::string> commands = {"-h","-m","-nm","-CArr","-bCl","-S","-i", "-c"};
+void putt(const int,const char**);
 void print_menu(void);
 int isFile(const char* file);
 int isHelp(const char* command);
@@ -19,25 +19,32 @@ int main(const int argc, const char** argv) {
         print_menu();
         return EXIT_SUCCESS;
     }
-        
+
     if(argc < 2 || !isFile(argv[1]))  {
         std::cerr << "invalid input. please include file and or commands\n";
         std::cerr << "for more information on what commands can be called run ./gen -h\n";
         return EXIT_FAILURE;
-    }   
+    }
     putt(argc, argv);
-    
+    std::string command = "nvim ";
+    command.append(argv[1]);
+    const char* ptr = command.c_str();
+
+    system(ptr);
+
     return EXIT_SUCCESS;
 
 }
+
 
 void print_menu(void) {
     std::cout << "help has arrived\n";
     std::cout << "available commands to add to template\n";
     std::cout << "-i: add extra imports. ex: -i [name]...[name]\n";
-    std::cout << "-c: add classes. ex: -c [name]...[name]\n";
+    std::cout << "-bCl: add unlimited blank classes. ex: -bCl [name]...[name]\n";
     std::cout << "-nm: the generated code will not create a main.\n";
     std::cout << "-S <Implements>: creates sort method necessary for sorting Objects\n";
+    std::cout << "-c: implements a class with given class variables\n";
     //class sort implements Comparator<> {}
     std::cout << "-CArr <Name><Type>: Creates an ArrayList<Object> that picks up n test cases\n";
     //int n = s.nextInt();
@@ -52,9 +59,9 @@ bool isCommand(const std::string word) {
 // note... argv[1] = file_name
 //there is going to be base code and -i will run right after the base imports.
 void putt(const int argc, const char** argv) {
-    
+
     std::string f = argv[1];
-    bool print_main = true;    
+    bool print_main = true;
     std::ofstream file;
     file.open(f);
     bool print_cin = false;
@@ -70,7 +77,7 @@ void putt(const int argc, const char** argv) {
         std::string command = argv[i];
         if(command == "-i") {
             int j = i+1;
-            
+
             if(j >= argc) {
                 std::cerr << "when running -i please include the imports you want!\n";
                 exit(EXIT_FAILURE);
@@ -78,7 +85,7 @@ void putt(const int argc, const char** argv) {
 
 
             while(j < argc) {
-                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;} 
+                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;}
                 if(argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
                     break;
                 }
@@ -93,9 +100,10 @@ void putt(const int argc, const char** argv) {
             if(!isCommand(argv[i+1]) && !isCommand(argv[i+2])) {name=argv[i+1]; type=argv[i+2]; i+=2; continue;}
         } else if(command == "-nm") {print_main =false;}
     }
-   
+
+
     file << "\n";
-    //this new line is just to make the code look nicer and less clunky 
+    //this new line is just to make the code look nicer and less clunky
     //this loop takes care of the classes that are input by the user
     //relooping kind of sucks but its okay because some people may want to use multiple -i for some reason!
     //-S <Implements>
@@ -114,16 +122,51 @@ void putt(const int argc, const char** argv) {
 
     for(int i = 2; i < argc; i++ ) {
         std::string command = argv[i];
+        std::vector<std::string> list;
+        if(command == "-c")
+        {
+            std::string cl_name;
+            file << "class ";
+            int j = i+1;
+            while(j < argc-1 && !isCommand(argv[j])) {
+                if(j == i+1) {
+                    cl_name = argv[j];
+                    file << argv[j] << " {\n";
+                    j++; continue;
+                }
+                std::string type = argv[j];
+                std::string name = argv[j+1];
+                list.push_back(type);
+                list.push_back(name);
+                file << "\t" << type << " " << name <<";\n";
+                j+=2;
+            }
+            file<<"\tpublic " << cl_name << "(";
+            for(int k = 0; k < list.size()-1; k+=2 ) {
+                file << list[k] << " " << list[k+1];
+                if(k != list.size()-2) file << ", ";
+            }
+            file << ") {\n";
+            for(int k = 1; k < list.size(); k+=2) {
+                file << "\t\tthis." << list[k] << " = " << list[k] << ";\n";
+            }
+            file << "\t}\n";
+            file << "}\n\n";
+        }
+    }
 
-        if(command == "-c") {
+    for(int i = 2; i < argc; i++ ) {
+        std::string command = argv[i];
+
+        if(command == "-bCl") {
             int j = i+1;
             if(j >= argc) {
                 std::cerr << "when running -c please include the classes you want!\n";
                 exit(EXIT_FAILURE);
             }
-            
+
             while(j < argc) {
-                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;} 
+                if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;}
                 if( isCommand(argv[j]) ||argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
                     break;
                 }
@@ -132,10 +175,10 @@ void putt(const int argc, const char** argv) {
                 j++;
             }
             i=j-1;
-        } 
+        }
     }
-        
-    //anything that is not after its explicit command will not be written to. just so you know. 
+
+    //anything that is not after its explicit command will not be written to. just so you know.
     uint8_t left = 0, right = f.size()-1;
     while(!std::isalpha(f[left]) || f[right] != '.') {
         if(f[right] == '.' && !std::isalpha(f[left])) {
@@ -152,18 +195,20 @@ void putt(const int argc, const char** argv) {
     if(print_main) {
         file << "public class " << f << " {\n";
         file << "\tpublic static void main(String[] args) throws IOException {\n";
-        file << "\n\t\tScanner s = new Scanner(new File(\"" << f << ".dat\"));\n\n"; 
+        file << "\n\t\tScanner s = new Scanner(new File(\"" << f << ".dat\"));\n\n";
         file << "\t\tint T = s.nextInt();\n";
         file << "\n\t\twhile(T-- > 0) {\n";
         if(print_cin) {
-            file << "\t\t\tint n = s.nextInt();\n"; 
-            if(name.size() == 0) {std::cerr << "please provide name for CArr\n"; exit(EXIT_FAILURE);} 
+            file << "\t\t\tint n = s.nextInt();\n";
+            if(name.size() == 0) {std::cerr << "please provide name for CArr\n"; exit(EXIT_FAILURE);}
             if(type.size() == 0) {
                 file <<"\t\t\tArrayList<Object> " << name << " = new ArrayList<Object> ();\n";
-            }   
+            }
             else file << "\t\t\tArrayList<" << type << "> " << name << " = new ArrayList<" << type<< "> ();\n";
             file << "\t\t\t" << "for(int i = 0; i < n; i++) {\n\t\t\t\t" << name << ".add(";
             file << "s.next" <<  "());\n\t\t\t}\n";
+        } else {
+            file << "\n";
         }
         file << "\t\t}";
         file << "\n\n\t\ts.close();\n\t}\n";
@@ -174,18 +219,18 @@ void putt(const int argc, const char** argv) {
             int j = i+1;
             std::vector<std::string> vec;
             while(j < argc && !isCommand(argv[j])) {
-                vec.push_back(argv[j++]); 
+                vec.push_back(argv[j++]);
             }
             file << "\n//------------------------------------------\n";
             file << "public static " << vec[1] << " " << vec[0] <<"(";
             for(int k = 2; k < vec.size()-1; k+=2 ) {
                 if(k == vec.size()-2) {file << vec[k] << " " << vec[k+1]; break;}
                 file << vec[k] << " " << vec[k+1] << ", ";
-            }       
+            }
             file << ") {\n\n\n\treturn " << "null;\n}\n";
             i=j-1;
         }
-        
+
     }
     if(print_main)file << "\n}";
     file.close();
@@ -200,11 +245,11 @@ int isFile(const char* file) {
         if(file[i] == '.') return 1;
     }
     return 0;
-} 
+}
 
 int isHelp(const char *command) {
     int size = std::strlen(command);
-    if(size!=2) return 0; 
+    if(size!=2) return 0;
     if(command[0] != '-' || command[1] != 'h') return 0;
-    return 1;  
+    return 1;
 }
