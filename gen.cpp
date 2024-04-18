@@ -86,9 +86,7 @@ void putt(const int argc, const char** argv) {
 
             while(j < argc) {
                 if(argv[j] == std::string("-nm")) {print_main = false; j++; continue;}
-                if(argv[j] == std::string("-c") || argv[j] == std::string("-i")) {
-                    break;
-                }
+                if(commands.count(argv[j])  != 0) break;
                 file << "import " << argv[j] << ";\n";
                 ++j;
             }
